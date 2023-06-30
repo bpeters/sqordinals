@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zdog Sphere Squiggle</title>
+    <script src="https://unpkg.com/zdog@1/dist/zdog.dist.min.js"></script>
+    <style>
+        body { background: #333; }
+        body {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: black;
+}
+canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+        .is-dragging { cursor: move; }
+    </style>
+</head>
+<body>
+    <canvas id="squiggle-canvas" width="480" height="480"></canvas>
+
+    <script>
+        // Create Zdog illustration
+        let illo = new Zdog.Illustration({
+            element: '#squiggle-canvas',
+            dragRotate: true,
+            rotate: { x: -Zdog.TAU/8 },
+            zoom: 0.5 // 2 times larger
+        });
+
+        // // Number of spheres and space between them
+        // let numSpheres = 10;
+        // let torusRadius = 300;
+        // let tubeRadius = 300;
+
+        // // Create spheres and store them for later use
+        // let spheres = [];
+        // for (let i = 0; i < numSpheres; i++) {
+        //     let angle1 = i * Zdog.TAU / numSpheres; // angle for torus circle
+        //     let angle2 = i * Zdog.TAU * 3 / numSpheres; // angle for tube circle
+
+        //     // calculate position of sphere on torus
+        //     let x = (torusRadius + tubeRadius * Math.cos(angle2)) * Math.cos(angle1);
+        //     let y = (torusRadius + tubeRadius * Math.cos(angle2)) * Math.sin(angle1);
+        //     let z = tubeRadius * Math.sin(angle2);
+
+        //     let sphere = new Zdog.Shape({
+        //         addTo: illo,
+        //         stroke: 100,
+        //         color: '#C25',
+        //         translate: { x: x, y: y, z: z },
+        //     });
+
+        //     spheres.push(sphere);
+        // }
+
+        // function hslToRgba(h, s, l, a) {
+        //     let r, g, b;
+        //     if(s == 0) {
+        //         r = g = b = l; // achromatic
+        //     } else {
+        //         let hue2rgb = function hue2rgb(p, q, t) {
+        //             if(t < 0) t += 1;
+        //             if(t > 1) t -= 1;
+        //             if(t < 1/6) return p + (q - p) * 6 * t;
+        //             if(t < 1/2) return q;
+        //             if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        //             return p;
+        //         }
+        //         let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        //         let p = 2 * l - q;
+        //         r = hue2rgb(p, q, h + 1/3);
+        //         g = hue2rgb(p, q, h);
+        //         b = hue2rgb(p, q, h - 1/3);
+        //     }
+        //     return `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a})`;
+        // }
+
+        // document.getElementById('squiggle-canvas').addEventListener('wheel', function(event) {
+        //     // Change zoom based on wheel scroll
+        //     let zoomChange = event.deltaY * -0.01; // Adjust the multiplier (-0.01) to control zoom speed
+        //     illo.zoom += zoomChange;
+
+        //     // Prevent page scrolling
+        //     event.preventDefault();
+        // }, { passive: false });
+
+        // // let cube = new Zdog.Box({
+        // //     addTo: illo,
+        // //     width: 100,
+        // //     height: 100,
+        // //     depth: 100,
+        // //     stroke: 20,
+        // //     color: '#000', // default face color
+        // //     leftFace: '#620',
+        // //     rightFace: '#826',
+        // //     topFace: '#ea0',
+        // //     bottomFace: '#620',
+        // // });
+
+        // // let cube2 = new Zdog.Box({
+        // //     addTo: illo,
+        // //     width: 50,
+        // //     height: 50,
+        // //     depth: 50,
+        // //     stroke: false,
+        // //     color: '#fff', // default face color
+        // //     leftFace: '#fff',
+        // //     rightFace: '#fff',
+        // //     topFace: '#fff',
+        // //     bottomFace: '#fff',
+        // // });
+
+        // // let sphere2 = new Zdog.Shape({
+        // //     addTo: illo,
+        // //     stroke: 50,
+        // //     color: '#000',
+        // // });
+
+        // // let tetrahedron = new Zdog.Anchor({
+        // //     addTo: illo
+        // // });
+
+        // // let A = { x: -58, y: 80 };
+        // // let B = { x: 58, y: 80 };
+        // // let C = { x: 0, y: -80 };
+        // // let D = { z: -100, y: 35 };
+
+        // // let triangle1 = new Zdog.Shape({
+        // //     addTo: tetrahedron,
+        // //     path: [ A, B, C ],
+        // //     closed: true,
+        // //     stroke: false,
+        // //     color: '#E62',
+        // //     fill: true,
+        // // });
+
+        // // let triangle2 = new Zdog.Shape({
+        // //     addTo: tetrahedron,
+        // //     path: [ A, B, D ],
+        // //     closed: true,
+        // //     stroke: false,
+        // //     color: '#E62',
+        // //     fill: true,
+        // // });
+
+        // // let triangle3 = new Zdog.Shape({
+        // //     addTo: tetrahedron,
+        // //     path: [ A, C, D ],
+        // //     closed: true,
+        // //     stroke: false,
+        // //     color: '#E62',
+        // //     fill: true,
+        // // });
+
+        // // let triangle4 = new Zdog.Shape({
+        // //     addTo: tetrahedron,
+        // //     path: [ B, C, D ],
+        // //     closed: true,
+        // //     stroke: false,
+        // //     color: '#E62',
+        // //     fill: true,
+        // // });
+
+        //         // size of the crystal structure
+        // // let size = 4;
+        // // // distance between atoms
+        // // let spacing = 40;
+        // // let atoms = [];
+
+        // // for (let x = -size; x <= size; x++) {
+        // //     for (let y = -size; y <= size; y++) {
+        // //         for (let z = -size; z <= size; z++) {
+        // //             let atom = new Zdog.Shape({
+        // //                 addTo: illo,
+        // //                 stroke: 20,
+        // //                 translate: {
+        // //                     x: x * spacing,
+        // //                     y: y * spacing,
+        // //                     z: z * spacing
+        // //                 },
+        // //                 color: (x + y + z) % 2 == 0 ? '#E62' : '#636',
+        // //             });
+
+        // //             atoms.push(atom);
+        // //         }
+        // //     }
+        // // }
+
+        // // size of the crystal structure
+        // let size = 1;
+        // // distance between atoms
+        // let spacing = 80;
+        // let atoms = [];
+        // for (let x = -size; x <= size; x++) {
+        //     for (let y = -size; y <= size; y++) {
+        //         for (let z = -size; z <= size; z++) {
+        //             let offset = ((x + y) % 2) * spacing / 2;
+
+        //             let atom = new Zdog.Shape({
+        //                 addTo: illo,
+        //                 stroke: 60,
+        //                 translate: {
+        //                     x: x * spacing,
+        //                     y: y * spacing + offset,
+        //                     z: z * spacing
+        //                 },
+        //                 color: '#E62',
+        //             });
+        //             atoms.push(atom);
+        //         }
+        //     }
+        // }
+
+        // function animate() {
+        //   let time = Date.now() * 0.0005; // get time in seconds
+
+        //   atoms.forEach((a, i) => {
+        //       let hue = (time + ((a.x + a.y + a.z) % 2 == 0 ? i : 0)) % 1; // cycle hue between 0 and 1
+        //       a.color = hslToRgba(hue, 1, 0.5, 0.5); // full saturation, 50% lightness
+        //   });
+
+        //   illo.rotate.x += 0.01;
+        //   illo.rotate.y += 0.01;
+        //   illo.rotate.z += 0.01;
+
+        //   // update color of each sphere based on time
+        //   spheres.forEach((sphere, i) => {
+        //       let hue = (time + i / numSpheres) % 1; // cycle hue between 0 and 1
+        //       sphere.color = hslToRgba(hue, 1, 0.5, 1); // full saturation, 50% lightness
+        //   });
+
+
+
+        //   // triangle1.color = hslToRgba((time + 1 / 5) % 1, 1, 0.5, 0.5);
+        //   // triangle2.color = hslToRgba((time + 2 / 5) % 1, 1, 0.5, 0.5);
+        //   // triangle3.color = hslToRgba((time + 3 / 5) % 1, 1, 0.5, 0.5);
+        //   // triangle4.color = hslToRgba((time + 4 / 5) % 1, 1, 0.5, 0.5);
+
+        //   // cube.color = hslToRgba((time + 1 / 6) % 1, 1, 0.5, 0.5);
+        //   // cube.leftFace = hslToRgba((time + 2 / 6) % 1, 1, 0.5, 0.5);
+        //   // cube.rightFace = hslToRgba((time + 3 / 6) % 1, 1, 0.5, 0.5);
+        //   // cube.topFace = hslToRgba((time + 4 / 6) % 1, 1, 0.5, 0.5);
+        //   // cube.bottomFace = hslToRgba((time + 5 / 6) % 1, 1, 0.5, 0.5);
+
+        //   // sphere2.color = hslToRgba((time + 10) % 1, 1, 0.5, 0.5);
+        //   // cube2.rotate.x += 0.01;
+        //   // cube2.rotate.y += 0.01;
+        //   // cube2.rotate.z += 0.01;
+
+            
+        //     illo.updateRenderGraph();
+        //     requestAnimationFrame(animate);
+        // }
+        // animate();
+
+        let coil = new Zdog.Shape({
+  addTo: illo,
+  path: [ { y: -60 }, { arc: [ { y: -20 }, { y: 20 } ] }, { y: 60 } ],
+  translate: { z: 40 },
+  color: '#636',
+  stroke: 20,
+  rotate: { x: Zdog.TAU/4 },
+});
+
+// Add duplicate coils for the slinky effect
+for ( let i = 0; i < 12; i++ ) {
+  coil.copyGraph({
+    rotate: { z: Zdog.TAU/12 * i },
+  });
+}
+
+// Create the spheres
+for ( let i = 0; i < 12; i++ ) {
+  new Zdog.Hemisphere({
+    addTo: illo,
+    diameter: 40,
+    stroke: 10,
+    color: '#000', // inner sphere color
+    backface: '#636', // stroke color
+    rotate: { z: Zdog.TAU/12 * i },
+    translate: { x: 80 },
+  });
+}
+
+function animate() {
+  illo.rotate.y += 0.01;
+  illo.updateRenderGraph();
+  requestAnimationFrame( animate );
+}
+
+animate();
+    </script>
+</body>
+</html>

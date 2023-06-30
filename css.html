@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Spinning Cube</title>
+        <style>
+            body {
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="https://threejs.org/build/three.js"></script>
+        <script src="https://threejs.org/examples/jsm/renderers/CSS3DRenderer.js"></script>
+        <script>
+            // Scene, Camera, Renderer
+            var scene = new THREE.Scene();
+            var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            var renderer = new THREE.CSS3DRenderer();
+
+            // Set size and append to document
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Cube
+            var element = document.createElement('div');
+            element.style.width = '100px';
+            element.style.height = '100px';
+            element.style.background = 'skyblue';
+
+            var object = new THREE.CSS3DObject(element);
+            scene.add(object);
+
+            // Position camera
+            camera.position.z = 500;
+
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Rotate cube
+                object.rotation.x += 0.01;
+                object.rotation.y += 0.01;
+
+                // Render
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Resize handler
+            window.addEventListener('resize', function() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }, false);
+        </script>
+    </body>
+</html>
