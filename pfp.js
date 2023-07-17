@@ -1,561 +1,225 @@
-import { Scene } from './three.js/src/scenes/Scene.js';
-import { PerspectiveCamera } from './three.js/src/cameras/PerspectiveCamera.js';
-// import { WebGLRenderer } from './three.js/src/renderers/WebGLRenderer.js';
-// import { AmbientLight } from './three.js/src/lights/AmbientLight.js';
-// import { MeshBasicMaterial } from './three.js/src/materials/MeshBasicMaterial.js';
-import { Group } from './three.js/src/objects/Group.js';
-// import { BoxGeometry } from './three.js/src/geometries/BoxGeometry.js';
-// import { Mesh } from './three.js/src/objects/Mesh.js';
-// import { CylinderGeometry } from './three.js/src/geometries/CylinderGeometry.js';
-// import { SphereGeometry } from './three.js/src/geometries/SphereGeometry.js';
-// import { Box3 } from './three.js/src/math/Box3.js';
-import { Vector3 } from './three.js/src/math/Vector3.js';
-import { Matrix4 } from './three.js/src/math/Matrix4.js';
-import { Object3D } from './three.js/src/core/Object3D.js';
-import { Quaternion } from './three.js/src/math/Quaternion.js';
+import { Illustration, Shape, Box, Cylinder, TAU } from 'zdog';
 
-const _position = new Vector3();
-const _quaternion = new Quaternion();
-const _scale = new Vector3();
+let canvasElement = document.querySelector('#sqordinal');
 
-class CSS3DObject extends Object3D {
+let width = window.innerWidth;
+let height = window.innerHeight;
 
-	constructor( element = document.createElement( 'div' ) ) {
+canvasElement.width = width;
+canvasElement.height = height;
 
-		super();
+let illo = new Illustration({
+  element: canvasElement,
+  dragRotate: true,
+  zoom: 3,
+  width: width,
+  height: height,
+  rotate: { x: -0.42, y: -0.4 },
+  translate: {
+    y: 10,
+  }
+});
 
-		this.isCSS3DObject = true;
+// Define the size and the gap between the cubes
+let cubeWidthDepth = 50;
+let cubeGap = 0;
 
-		this.element = element;
-		this.element.style.position = 'absolute';
-		this.element.style.pointerEvents = 'auto';
-		this.element.style.userSelect = 'none';
+// The height of each individual cube to make sure the overall structure remains a cube
+let cubeHeight = cubeWidthDepth / 10;
 
-		this.element.setAttribute( 'draggable', false );
+// The total size of a cube including the gap
+let totalSize = cubeHeight + cubeGap;
 
-		this.addEventListener( 'removed', function () {
+const boxes = [];
+const cylinders = [];
 
-			this.traverse( function ( object ) {
+let totalHeight = (cubeHeight + cubeGap) * 9;
 
-				if ( object.element instanceof Element && object.element.parentNode !== null ) {
+// Iterate to create the 10 cubes
+for(let i = 0; i < 10; i++) {
+  let hue = i * 36; // Initial hue for this box
+  let color = 'hsl(' + hue + ', 100%, 50%)'; // Create color string
+  let box = new Box({
+    addTo: illo,
+    width: cubeWidthDepth * 2,
+    height: cubeHeight - 2,
+    depth: cubeWidthDepth * 2,
+    stroke: false,
+    color: color,
+    translate: { y: -i * totalSize },
+  });
 
-					object.element.parentNode.removeChild( object.element );
-
-				}
-
-			} );
-
-		} );
-
-	}
-
-	copy( source, recursive ) {
-
-		super.copy( source, recursive );
-
-		this.element = source.element.cloneNode( true );
-
-		return this;
-
-	}
-
+  box.rotate.x = Math.random() * 0.1; // Random rotation around x-axis
+  box.rotate.y = Math.random() * 0.1; // Random rotation around y-axis
+  box.rotate.z = Math.random() * 0.1; // Random rotation around z-axis
+  boxes.push({
+    box,
+    hue,
+  });
 }
 
-//
-
-const _matrix = new Matrix4();
-const _matrix2 = new Matrix4();
-
-class CSS3DRenderer {
-
-	constructor( parameters = {} ) {
-
-		const _this = this;
-
-		let _width, _height;
-		let _widthHalf, _heightHalf;
-
-		const cache = {
-			camera: { fov: 0, style: '' },
-			objects: new WeakMap()
-		};
-
-		const domElement = parameters.element !== undefined ? parameters.element : document.createElement( 'div' );
-
-		domElement.style.overflow = 'hidden';
-
-		this.domElement = domElement;
-
-		const viewElement = document.createElement( 'div' );
-		viewElement.style.transformOrigin = '0 0';
-		viewElement.style.pointerEvents = 'none';
-		domElement.appendChild( viewElement );
-
-		const cameraElement = document.createElement( 'div' );
-
-		cameraElement.style.transformStyle = 'preserve-3d';
-
-		viewElement.appendChild( cameraElement );
-
-		this.getSize = function () {
-
-			return {
-				width: _width,
-				height: _height
-			};
-
-		};
-
-		this.render = function ( scene, camera ) {
-
-			const fov = camera.projectionMatrix.elements[ 5 ] * _heightHalf;
-
-			if ( cache.camera.fov !== fov ) {
-
-				viewElement.style.perspective = camera.isPerspectiveCamera ? fov + 'px' : '';
-				cache.camera.fov = fov;
-
-			}
-
-			if ( camera.view && camera.view.enabled ) {
-
-				// view offset
-				viewElement.style.transform = `translate( ${ - camera.view.offsetX * ( _width / camera.view.width ) }px, ${ - camera.view.offsetY * ( _height / camera.view.height ) }px )`;
-
-				// view fullWidth and fullHeight, view width and height
-				viewElement.style.transform += `scale( ${ camera.view.fullWidth / camera.view.width }, ${ camera.view.fullHeight / camera.view.height } )`;
-
-			} else {
-
-				viewElement.style.transform = '';
-
-			}
-
-			if ( scene.matrixWorldAutoUpdate === true ) scene.updateMatrixWorld();
-			if ( camera.parent === null && camera.matrixWorldAutoUpdate === true ) camera.updateMatrixWorld();
-
-			let tx, ty;
-
-			if ( camera.isOrthographicCamera ) {
-
-				tx = - ( camera.right + camera.left ) / 2;
-				ty = ( camera.top + camera.bottom ) / 2;
-
-			}
-
-			const scaleByViewOffset = camera.view && camera.view.enabled ? camera.view.height / camera.view.fullHeight : 1;
-			const cameraCSSMatrix = camera.isOrthographicCamera ?
-				`scale( ${ scaleByViewOffset } )` + 'scale(' + fov + ')' + 'translate(' + epsilon( tx ) + 'px,' + epsilon( ty ) + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse ) :
-				`scale( ${ scaleByViewOffset } )` + 'translateZ(' + fov + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse );
-
-			const style = cameraCSSMatrix +
-				'translate(' + _widthHalf + 'px,' + _heightHalf + 'px)';
-
-			if ( cache.camera.style !== style ) {
-
-				cameraElement.style.transform = style;
-
-				cache.camera.style = style;
-
-			}
-
-			renderObject( scene, scene, camera, cameraCSSMatrix );
-
-		};
-
-		this.setSize = function ( width, height ) {
-
-			_width = width;
-			_height = height;
-			_widthHalf = _width / 2;
-			_heightHalf = _height / 2;
-
-			domElement.style.width = width + 'px';
-			domElement.style.height = height + 'px';
-
-			viewElement.style.width = width + 'px';
-			viewElement.style.height = height + 'px';
-
-			cameraElement.style.width = width + 'px';
-			cameraElement.style.height = height + 'px';
-
-		};
-
-		function epsilon( value ) {
-
-			return Math.abs( value ) < 1e-10 ? 0 : value;
-
-		}
-
-		function getCameraCSSMatrix( matrix ) {
-
-			const elements = matrix.elements;
-
-			return 'matrix3d(' +
-				epsilon( elements[ 0 ] ) + ',' +
-				epsilon( - elements[ 1 ] ) + ',' +
-				epsilon( elements[ 2 ] ) + ',' +
-				epsilon( elements[ 3 ] ) + ',' +
-				epsilon( elements[ 4 ] ) + ',' +
-				epsilon( - elements[ 5 ] ) + ',' +
-				epsilon( elements[ 6 ] ) + ',' +
-				epsilon( elements[ 7 ] ) + ',' +
-				epsilon( elements[ 8 ] ) + ',' +
-				epsilon( - elements[ 9 ] ) + ',' +
-				epsilon( elements[ 10 ] ) + ',' +
-				epsilon( elements[ 11 ] ) + ',' +
-				epsilon( elements[ 12 ] ) + ',' +
-				epsilon( - elements[ 13 ] ) + ',' +
-				epsilon( elements[ 14 ] ) + ',' +
-				epsilon( elements[ 15 ] ) +
-			')';
-
-		}
-
-		function getObjectCSSMatrix( matrix ) {
-
-			const elements = matrix.elements;
-			const matrix3d = 'matrix3d(' +
-				epsilon( elements[ 0 ] ) + ',' +
-				epsilon( elements[ 1 ] ) + ',' +
-				epsilon( elements[ 2 ] ) + ',' +
-				epsilon( elements[ 3 ] ) + ',' +
-				epsilon( - elements[ 4 ] ) + ',' +
-				epsilon( - elements[ 5 ] ) + ',' +
-				epsilon( - elements[ 6 ] ) + ',' +
-				epsilon( - elements[ 7 ] ) + ',' +
-				epsilon( elements[ 8 ] ) + ',' +
-				epsilon( elements[ 9 ] ) + ',' +
-				epsilon( elements[ 10 ] ) + ',' +
-				epsilon( elements[ 11 ] ) + ',' +
-				epsilon( elements[ 12 ] ) + ',' +
-				epsilon( elements[ 13 ] ) + ',' +
-				epsilon( elements[ 14 ] ) + ',' +
-				epsilon( elements[ 15 ] ) +
-			')';
-
-			return 'translate(-50%,-50%)' + matrix3d;
-
-		}
-
-		function renderObject( object, scene, camera, cameraCSSMatrix ) {
-
-			if ( object.isCSS3DObject ) {
-
-				const visible = ( object.visible === true ) && ( object.layers.test( camera.layers ) === true );
-				object.element.style.display = ( visible === true ) ? '' : 'none';
-
-				if ( visible === true ) {
-
-					object.onBeforeRender( _this, scene, camera );
-
-					let style;
-
-					if ( object.isCSS3DSprite ) {
-
-						// http://swiftcoder.wordpress.com/2008/11/25/constructing-a-billboard-matrix/
-
-						_matrix.copy( camera.matrixWorldInverse );
-						_matrix.transpose();
-
-						if ( object.rotation2D !== 0 ) _matrix.multiply( _matrix2.makeRotationZ( object.rotation2D ) );
-
-						object.matrixWorld.decompose( _position, _quaternion, _scale );
-						_matrix.setPosition( _position );
-						_matrix.scale( _scale );
-
-						_matrix.elements[ 3 ] = 0;
-						_matrix.elements[ 7 ] = 0;
-						_matrix.elements[ 11 ] = 0;
-						_matrix.elements[ 15 ] = 1;
-
-						style = getObjectCSSMatrix( _matrix );
-
-					} else {
-
-						style = getObjectCSSMatrix( object.matrixWorld );
-
-					}
-
-					const element = object.element;
-					const cachedObject = cache.objects.get( object );
-
-					if ( cachedObject === undefined || cachedObject.style !== style ) {
-
-						element.style.transform = style;
-
-						const objectData = { style: style };
-						cache.objects.set( object, objectData );
-
-					}
-
-					if ( element.parentNode !== cameraElement ) {
-
-						cameraElement.appendChild( element );
-
-					}
-
-					object.onAfterRender( _this, scene, camera );
-
-				}
-
-			}
-
-			for ( let i = 0, l = object.children.length; i < l; i ++ ) {
-
-				renderObject( object.children[ i ], scene, camera, cameraCSSMatrix );
-
-			}
-
-		}
-
-	}
-
+let innerCube = new Box({
+  addTo: illo,
+  width: cubeWidthDepth / 1.5,
+  height: cubeWidthDepth / 1.5,
+  depth: cubeWidthDepth / 1.5,
+  stroke: 10,
+  color: '#fff', // placeholder color
+  leftFace: '#fff',
+  rightFace: '#fff',
+  topFace: '#fff',
+  bottomFace: '#fff',
+  translate: { y: -totalHeight / 1.5 },
+});
+
+
+let atomCube = new Box({
+  addTo: illo,
+  width: cubeWidthDepth / 4,
+  height: cubeWidthDepth / 4,
+  depth: cubeWidthDepth / 4,
+  stroke: false,
+  color: '#fff', // placeholder color
+  leftFace: '#fff',
+  rightFace: '#fff',
+  topFace: '#fff',
+  bottomFace: '#fff',
+  translate: { y: -totalHeight / 1.5 },
+});
+
+let eyeSize = cubeWidthDepth / 5;
+
+let leftEye = new Shape({
+  addTo: innerCube,
+  stroke: eyeSize / 1.2,
+  color: 'white',
+  translate: { x: -10, z: 22 }, // Position the left eye
+});
+
+let rightEye = new Shape({
+  addTo: innerCube,
+  stroke: eyeSize / 1.2,
+  color: 'white',
+  translate: { x: 10, z: 22 }, // Position the left eye
+});
+
+for(let i = 0; i < 6; i++) {
+  let hue = i * 36;
+
+  let cylinder = new Cylinder({
+    addTo: illo,
+    diameter: cubeWidthDepth / 1.5,
+    length: cubeHeight,
+    stroke: false,
+    color: '#fff',
+    rotate: { x: TAU / 4 },
+    translate: { y: i * totalSize },
+  });
+
+  cylinders.push({
+    cylinder,
+    hue,
+  });
 }
 
 
-    // Create a scene
-    let scene = new Scene();
-    var camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
+canvasElement.addEventListener('wheel', function(event) {
+  let zoomChange = event.deltaY * -0.01;
+  illo.zoom += zoomChange;
 
-    // let camera = new PerspectiveCamera(75, 1, 0.1, 1000);
-    // camera.position.z = 1.9;
-    // camera.position.y = 0.65;
+  event.preventDefault();
+}, { passive: false });
 
-    var renderer = new CSS3DRenderer();
+let initialDistance = 0;
 
-    // Set size and append to document
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+canvasElement.addEventListener('touchmove', function(event) {
+  if (event.touches.length === 2) {
+    let touch1 = event.touches[0];
+    let touch2 = event.touches[1];
+    let deltaX = touch2.pageX - touch1.pageX;
+    let deltaY = touch2.pageY - touch1.pageY;
+    let currentDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // var cube = new Group();
-
-    // var element, material, mesh;
-    // var translations = [
-    //     [0, 50, 0], //top
-    //     [0, -50, 0], //bottom
-    //     [0, 0, 50], //front
-    //     [0, 0, -50], //back
-    //     [50, 0, 0], //right
-    //     [-50, 0, 0], //left
-    // ];
-    // var rotations = [
-    //     [Math.PI / 2, 0, 0],
-    //     [-Math.PI / 2, 0, 0],
-    //     [0, 0, 0],
-    //     [0, Math.PI, 0],
-    //     [0, -Math.PI / 2, 0],
-    //     [0, Math.PI / 2, 0],
-    // ];
-
-    // for (var i = 0; i < 6; i++) {
-    //     element = document.createElement('div');
-    //     element.className = 'face';
-    //     material = new CSS3DObject(element);
-    //     material.position.fromArray(translations[i]);
-    //     material.rotation.fromArray(rotations[i]);
-    //     cube.add(material);
-    // }
-
-    // scene.add(cube);
-
-    var sphere = new Group();
-
-    var steps = 50; // Increase for higher resolution sphere
-    var size = 100; // Radius of sphere
-
-    for (var lat = 0; lat <= steps; lat++) {
-        var theta = lat * Math.PI / steps;
-        var sinTheta = Math.sin(theta);
-        var cosTheta = -Math.cos(theta);
-
-        for (var lon = 0; lon <= steps; lon++) {
-            var phi = lon * 2 * Math.PI / steps;
-            var sinPhi = Math.sin(phi);
-            var cosPhi = Math.cos(phi);
-
-            var x = cosPhi * sinTheta;
-            var y = cosTheta;
-            var z = sinPhi * sinTheta;
-
-            var dot = document.createElement('div');
-            dot.className = 'dot';
-            var dotObject = new CSS3DObject(dot);
-            dotObject.position.set(size * x, size * y, size * z);
-
-            sphere.add(dotObject);
-        }
+    if (initialDistance > 0) {
+      let deltaDistance = currentDistance - initialDistance;
+      illo.zoom += deltaDistance * 0.01;
     }
 
-    scene.add(sphere);
+    initialDistance = currentDistance;
+  } else {
+    initialDistance = 0;
+  }
 
-    // Position camera
-    camera.position.z = 500;
+  event.preventDefault();
+});
 
-    // Animation
-    function animate() {
-        requestAnimationFrame(animate);
-
-        // Rotate cube
-        sphere.rotation.x += 0.01;
-        sphere.rotation.y += 0.01;
-
-        // Render
-        renderer.render(scene, camera);
+const hslToRgba = (h, s, l, a) => {
+  let r, g, b;
+  if(s === 0) {
+    r = g = b = l;
+  } else {
+    let hue2rgb = function hue2rgb(p, q, t) {
+      if(t < 0) t += 1;
+      if(t > 1) t -= 1;
+      if(t < 1/6) return p + (q - p) * 6 * t;
+      if(t < 1/2) return q;
+      if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
     }
+    let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    let p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a})`;
+}
 
-    animate();
+let innerHue = 100;
+let innerColor;
 
+// Animation loop
+function animate() {
+  // Apply color to all boxes
+  for (let item of boxes) {
+    item.hue = (item.hue + 1) % 360; // Increment hue and make sure it stays between 0 and 359
+    let color = hslToRgba(item.hue / 360, 1, 0.5, 0.8);
+    let trans = hslToRgba(item.hue / 360, 1, 0.5, 0)
+    item.box.color = color;
+    item.box.leftFace = trans;
+    item.box.rightFace = trans;
+    item.box.topFace = trans;
+    item.box.bottomFace = trans;
 
-    // let renderer = new WebGLRenderer();
-    // renderer.setSize(500, 500);
-    // document.body.appendChild(renderer.domElement);
+    let rotationX = Math.random() * 0.01; // Random rotation around x-axis
+    let rotationY = Math.random() * 0.01; // Random rotation around y-axis
+    let rotationZ = Math.random() * 0.01; // Random rotation around z-axis
+    item.box.rotate.x += rotationX;
+    item.box.rotate.y += rotationY;
+    item.box.rotate.z += rotationZ;
+  }
 
-    // const ambientLight = new AmbientLight(0xffffff, 1);
-    // scene.add(ambientLight);
+  for (let item of cylinders) {
+    item.hue = (item.hue + 1) % 360; // Increment hue and make sure it stays between 0 and 359
+    let color = hslToRgba(item.hue / 360, 1, 0.5, 0.5);
+    item.cylinder.color = color;
+    innerColor = color;
+  }
 
-    // const outerCubes = [];
-    // const innerCubes = [];
-    // const cylinders = [];
+  innerCube.color = innerColor;
+  innerCube.leftFace = innerColor;
+  innerCube.rightFace = innerColor;
+  innerCube.topFace = innerColor;
+  innerCube.bottomFace = innerColor;
 
-    // let group = new Group();
+  atomCube.rotate.x += 0.01;
+  atomCube.rotate.y += 0.01;
+  atomCube.rotate.z += 0.01;
 
-    // for (var i = 0; i < 10; i++) {
-    //     const material = new MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.4, side: DoubleSide});
+  illo.updateRenderGraph();
+  requestAnimationFrame(animate);
+}
 
-    //     var geometry = new BoxGeometry(1, 0.1, 1);
-    //     var box = new Mesh(geometry, material);
-    //     box.position.y = i * 0.1;
-    //     box.rotation.y = Math.PI / 4;
-    //     // box.rotation.y += Math.PI / 36;
-    //     box.rotation.x = 12 * (Math.PI / 180);
-    //     box.colorValue = Math.random() * 360; // start color
-    //     box.colorIncrement = Math.random(); // color change speed
-    //     box.position.z = Math.random() * 1
-    //     outerCubes.push(box);
-    //     group.add(box);
-    // }
-
-    // const cylinderHeight = 0.6;
-    // const cylinderCount = 12;
-    // const cylinderRadius = 0.35;
-    // const gapSize = 0;
-    // let color = 0;
-
-    // // Create the smaller boxes
-    // for (var i = 0; i < 8; i++) {
-    //     const material = new MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.8});
-
-    //     var geometry = new BoxGeometry(0.8, 0.1, 0.8);
-    //     var box = new Mesh(geometry, material);
-    //     box.position.y = (i * 0.1) + 0.1; // Start a bit higher to be inside the larger boxes
-    //     box.rotation.y = Math.PI / 4;
-    //     // box.rotation.y += Math.PI / 36;
-    //     box.rotation.x = 12 * (Math.PI / 180);
-    //     box.colorValue = Math.random() * 360; // start color
-    //     box.colorIncrement = Math.random(); // color change speed
-
-    //     innerCubes.push(box);
-    //     group.add(box);
-    // }
-
-    // for (let i = 0; i < cylinderCount; i++) {
-    //   let cylinderGeometry = new CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight / cylinderCount, 32);
-
-    //   const cylinderMaterial = new MeshBasicMaterial({
-    //     color: 0xffffff, transparent: true, opacity: i % 2 === 0 ? 0 : 0.8 });
-
-    //   const cylinder = new Mesh(cylinderGeometry, cylinderMaterial);
-    //   cylinder.position.y = (i * (cylinderHeight / cylinderCount + gapSize) - cylinderHeight / 2) - 0.4;
-    //   cylinder.colorValue = Math.random() * 360; // start color
-    //   cylinder.colorIncrement = Math.random(); // color change speed
-
-    //   cylinders.push(cylinder);
-    //   group.add(cylinder);
-    // }
-
-    // const eyeRadius = 0.12; // Adjust the size of the eye spheres as desired
-    // const eyeGeometry = new SphereGeometry(eyeRadius, 32, 32);
-    // const eyeMaterial = new MeshBasicMaterial({ color: 0x000000 });
-    // const leftEye = new Mesh(eyeGeometry, eyeMaterial);
-    // const rightEye = new Mesh(eyeGeometry, eyeMaterial);
-    // leftEye.position.set(-0.25, 0, 0.4); // Adjust the positions of the eye spheres
-    // rightEye.position.set(0.2, 0, 0.4);
-
-    // // Add the eye spheres to the desired cubes
-    // innerCubes[4].add(leftEye);
-    // innerCubes[4].add(rightEye);
-  
-    // let g = new BoxGeometry(2, 2, 2);
-    // let m = new MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.02 });
-    // let largeCube = newMesh(g, m);
-    // largeCube.rotation.y = Math.PI / 4;
-
-    // group.add(largeCube)
-
-    // // Calculate the bounding box and get its center
-    // let bound = new Box3().setFromObject( group );
-    // let center = bound.getCenter( new Vector3() );
-
-    // // Adjust group position
-    // group.position.x = center.x;
-    // group.position.y = center.y;
-    // group.position.z = center.z;
-
-    // // Adjust positions of all children
-    // group.children.forEach((child) => {
-    //   child.position.x -= center.x;
-    //   child.position.y -= center.y;
-    //   child.position.z -= center.z;
-    // });
-
-    // scene.add(group);
-
-    // let time = 0;
-
-
-    //   // Animation loop
-    // function animate() {
-    //   requestAnimationFrame(animate);
-
-    //   largeCube.rotation.y -= 0.001
-    //   largeCube.rotation.x += 0.001
-
-    //   leftEye.material.color.setHSL(Math.floor(color) / 360, 1, 0.5);
-    //   leftEye.material.needsUpdate = true;
-
-    //   for (const cube of outerCubes) {
-    //     cube.material.color.setHSL(Math.floor(cube.colorValue) / 360, 1, 0.5);
-    //     cube.material.needsUpdate = true;
-    //     cube.rotation.y += cube.colorIncrement / 100;
-        
-    //     // Increment this cube's color by its unique increment
-    //     cube.colorValue += cube.colorIncrement;
-    //     if (cube.colorValue >= 360) cube.colorValue -= 360; // Wrap color value
-    //   }
-
-    //   for (const cube of innerCubes) {
-    //     let hue = ((Math.sin(time + cube.position.y + (color / 360)) + 1) / 2);
-    //     cube.material.color.setHSL(hue, 1, 0.5);
-    //     cube.material.needsUpdate = true;
-        
-    //     color += 0.05;
-    //   }
-
-    //   for (const cube of cylinders) {
-    //     let hue = ((Math.sin(time + cube.position.y + (color / 360)) + 1) / 2);
-    //     cube.material.color.setHSL(hue, 1, 0.5);
-    //     cube.material.needsUpdate = true;
-        
-    //     color += 0.05;
-    //   }
-
-    //   innerCubes[1].rotation.y -= 0.005;
-    //   innerCubes[1].material.color.setHSL(Math.floor(color) / 360, 1, 0.5);
-    //   innerCubes[1].material.needsUpdate = true;
-
-    //   renderer.render(scene, camera);
-    // }
-
-    // animate();
+// Start the animation
+animate();

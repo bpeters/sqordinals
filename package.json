@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "terser-webpack-plugin": "^5.3.9",
+    "web3": "^4.0.3",
     "webpack": "^5.88.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "zdog": "^1.1.3"
   }
 }

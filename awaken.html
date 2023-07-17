@@ -31,10 +31,10 @@ body, html, #sqordinal {
   <canvas id="sqordinal"></canvas>
 
   <script>
-    const HASH = '0x06d0713e1131e20d84c00c97dc61d0b33d5c2b22379d0697e7f0d806d0a39003';
+    const HASH = '0x0101010101010101010101010101010101010101010101010101010101010101';
     let canvasElement = document.querySelector('#sqordinal');
 
-    let isRotating = false;
+    let isRotating = true;
 
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -48,7 +48,6 @@ body, html, #sqordinal {
       zoom: 1,
       width: width,
       height: height,
-      rotate: { x: Math.PI / 3, y: Math.PI, z: Math.PI / 3 },
     });
 
     let group = new Zdog.Group({
@@ -150,13 +149,12 @@ body, html, #sqordinal {
       sqord.dodge = sqord.decPairs[8] < 15;
       sqord.squared = sqord.decPairs[6] < 15;
       sqord.spread = (sqord.decPairs[28] < 15 ? 2 : mapValue(sqord.decPairs[28], 0, 255, 5, 50)) || 0;
-      sqord.rotateX = (sqord.decPairs[15] < 128 ? -1 * sqord.decPairs[15] / 255 : sqord.decPairs[15] / 255) || 0;
-      sqord.rotateY = (sqord.decPairs[16] < 128 ? -1 * sqord.decPairs[16] / 255 : sqord.decPairs[15] / 255) || 0;
-      sqord.rotateZ = (sqord.decPairs[14] < 128 ? -1 * sqord.decPairs[14] / 255 : sqord.decPairs[14] / 255) || 0;
+      sqord.rotateX = (sqord.decPairs[15] < 128 ? -1 * sqord.decPairs[15] / 255 : sqord.decPairs[15] / 255) + 0.1 || 1;
+      sqord.rotateY = (sqord.decPairs[16] < 128 ? -1 * sqord.decPairs[16] / 255 : sqord.decPairs[15] / 255) + 0.1 || 1;
+      sqord.rotateZ = (sqord.decPairs[14] < 128 ? -1 * sqord.decPairs[14] / 255 : sqord.decPairs[14] / 255) + 0.1 || 1;
       sqord.spikes = sqord.decPairs[13] < 128;
       sqord.flow = sqord.decPairs[12] < 128;
       sqord.index = 0;
-      sqord.pause = false;
 
       sqord.steps = sqord.slinky ?
         ((sqord.decPairs[17] % 100) + 1) :
@@ -262,8 +260,8 @@ body, html, #sqordinal {
       let isBlack = false;
 
       if (sqord.fuzzy) {
-        let fuzzX = x + mapValue(rnd(sqord), 0, 1, 0, height / 10);
-        let fuzzY = y - mapValue(rnd(sqord), 0, 1, 0, height / 10);
+        let fuzzX = x + mapValue(rnd(sqord), 0, 1, 0, height / 8);
+        let fuzzY = y - mapValue(rnd(sqord), 0, 1, 0, height / 8);
         let fuzzZ = mapValue(rnd(sqord), 0, 1, 0, height / 4);
 
         let size = mapValue(rnd(sqord), 0, 1, height / 160, height / 16);
@@ -281,7 +279,7 @@ body, html, #sqordinal {
               rightFace: '#fff',
               topFace: '#fff',
               bottomFace: '#fff',
-              translate: { x, y, z },
+              translate: { x: fuzzX, y: fuzzY, z: fuzzZ  },
               visible: sqord.flipper ? true : false,
             }),
             opacity: 0.8,
@@ -293,7 +291,7 @@ body, html, #sqordinal {
               addTo: group,
               stroke: size,
               color: '#fff',
-              translate: { x, y, z },
+              translate: { x: fuzzX, y: fuzzY, z: fuzzZ  },
               visible: sqord.flipper ? true : false,
             }),
             opacity: 0.8,
@@ -496,6 +494,47 @@ body, html, #sqordinal {
         isRotating = !isRotating;
       }
     }, false);
+
+    document.getElementById('sqordinal').addEventListener('dblclick', function(event) {
+      isRotating = !isRotating;
+      event.preventDefault();
+    });
+
+    let lastTap = 0;
+
+    document.getElementById('sqordinal').addEventListener('touchend', function(event) {
+      event.preventDefault();
+      let currentTime = Date.now();
+      let tapLength = currentTime - lastTap;
+      if (tapLength < 500 && tapLength > 0) {
+        isRotating = !isRotating;
+      }
+
+      lastTap = currentTime;
+    });
+
+    let initialDistance = 0;
+
+    document.getElementById('sqordinal').addEventListener('touchmove', function(event) {
+      if (event.touches.length === 2) {
+        let touch1 = event.touches[0];
+        let touch2 = event.touches[1];
+        let deltaX = touch2.pageX - touch1.pageX;
+        let deltaY = touch2.pageY - touch1.pageY;
+        let currentDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        if (initialDistance > 0) {
+          let deltaDistance = currentDistance - initialDistance;
+          illo.zoom += deltaDistance * 0.01;
+        }
+
+        initialDistance = currentDistance;
+      } else {
+        initialDistance = 0;
+      }
+
+      event.preventDefault();
+    });
 
     function hslToRgba(h, s, l, a) {
       let r, g, b;

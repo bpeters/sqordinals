@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Generative Music</title>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.8.34/build/Tone.js"></script>
+    <script>
+      let isPlaying = false;
+
+      // document.addEventListener('click', () => {
+
+      //   isPlaying = !isPlaying;
+      //   console.log(isPlaying);
+      //   if (isPlaying) {
+      //    // Create a synth for the kick, snare, and hi-hat
+      //     const kick = new Tone.MembraneSynth({
+      //       volume: -6
+      //     }).toDestination();
+      //     const snare = new Tone.NoiseSynth({
+      //       volume: -12
+      //     }).toDestination();
+      //     const hihat = new Tone.NoiseSynth({
+      //       volume: -6
+      //     }).toDestination();
+
+      //     const loopKick = new Tone.Loop(time => {
+      //       kick.triggerAttackRelease("C2", "8n", time);
+      //     }, "1n").start(0);
+
+      //     const loopSnare = new Tone.Loop(time => {
+      //       snare.triggerAttackRelease("16n", time);
+      //     }, "2n").start("4n");
+
+      //     // const loopHihat = new Tone.Loop(time => {
+      //     //   hihat.triggerAttackRelease("32n", time);
+      //     // }, "4n").start("8n");
+
+      //     const synth = new Tone.PolySynth(Tone.Synth, {
+      //       volume: -10,
+      //       oscillator: {
+      //         type: "sine"
+      //       },
+      //       envelope: {
+      //         attack: 0.1,
+      //         decay: 0.3,
+      //         sustain: 0.1,
+      //         release: 1
+      //       }
+      //     }).toDestination();
+
+      //     const pattern = new Tone.Pattern((time, note) => {
+      //         synth.triggerAttackRelease(note, "8n", time);
+      //     }, ["C3", "E3", "G3", "B3", "A3", "F3", "D3", "G3"], "upDown").start(0);
+
+      //     // Define two different patterns
+      //     const pattern1 = new Tone.Pattern((time, note) => {
+      //         synth.triggerAttackRelease(note, "8n", time);
+      //     }, ["C3", "E3", "G3", "B3"], "upDown");
+
+      //     const pattern2 = new Tone.Pattern((time, note) => {
+      //         synth.triggerAttackRelease(note, "8n", time);
+      //     }, ["A3", "F3", "D3", "G3"], "downUp");
+
+      //     // Start the first pattern immediately and the second pattern after 8 bars
+      //     pattern1.start(0);
+      //     pattern2.start('8m');
+
+      //     Tone.Transport.bpm.value = 80;
+      //     Tone.Transport.start();
+      //   } else {
+      //     Tone.Transport.stop();
+      //     Tone.Transport.cancel();
+      //   }
+      // });
+
+      document.addEventListener('click', () => {
+        isPlaying = !isPlaying;
+
+        if (isPlaying) {
+        // Synths
+        const pianoSynth = new Tone.AMSynth({
+          harmonicity: 3.999,
+          oscillator: { type: 'square' },
+          envelope: { attack: 0.03, decay: 0.3, sustain: 0.1, release: 1 },
+          modulation: { volume: 13, type: 'square6' },
+          modulationEnvelope: { attack: 0.5, decay: 0, sustain: 1, release: 0.5 },
+        }).toDestination();
+
+        const bassSynth = new Tone.MonoSynth({
+          oscillator: { type: "sawtooth" },
+          envelope: { attack: 0.1, decay: 0.3, sustain: 0.2, release: 2 },
+        }).toDestination();
+
+        const drumSynth = new Tone.MembraneSynth().toDestination();
+
+        // Sequences
+        const melodyNotes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+        const bassNotes = ['C2', 'C2', 'G2', 'G2'];
+        const drumPart = ['C2', null, null, 'C2'];
+
+        const melodyPart = new Tone.Sequence((time, note) => {
+          pianoSynth.triggerAttackRelease(note, '8n', time);
+        }, melodyNotes, '8n');
+
+        const bassPart = new Tone.Sequence((time, note) => {
+          bassSynth.triggerAttackRelease(note, '8n', time);
+        }, bassNotes, '4n');
+
+        const drumSequence = new Tone.Sequence((time, note) => {
+          if (note) drumSynth.triggerAttackRelease(note, '8n', time);
+        }, drumPart, '4n');
+
+        // Start sequences and set tempo
+        Tone.Transport.bpm.value = 90;
+        melodyPart.start();
+        bassPart.start();
+        drumSequence.start();
+        Tone.Transport.start();
+        } else {
+          Tone.Transport.stop();
+          Tone.Transport.cancel();
+        }
+      });
+    </script>
+  </body>
+</html>
