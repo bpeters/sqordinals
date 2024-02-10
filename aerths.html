@@ -1,0 +1,79 @@
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/npm/fluid-canvas@latest"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta charset="utf-8"/>
+<style type="text/css">
+html {
+  height: 100%;
+  width: 100%;
+}
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: black;
+  overflow: hidden;
+}
+body, html, #aerth {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+</style>
+</head>
+<body>
+  <canvas id="aerth"></canvas>
+
+  <script>
+    const canvas = document.getElementById('aerth');
+    const aerth = new Fluid(canvas);
+
+    aerth.mapBehaviors({
+      sim_resolution: 128,
+      dye_resolution: 512,
+
+      paused: false,
+      clamp_values: true,
+      embedded_dither: true,
+
+      dissipation: 0.98,
+      velocity: .98,
+      pressure: .8,
+      pressure_iteration: 20,
+      curl: 0,
+      emitter_size: 1,
+
+      /* Fluid Color */
+      fluid_color: [
+        [0, 0, 0],
+        [.4, .2, 0]
+      ],
+
+      render_shaders: true,
+      multi_color: true,
+      render_bloom: true,
+
+      bloom_iterations: 8,
+      bloom_resolution: 256,
+      intensity: 0.8,
+      threshold: 0.6,
+      soft_knee: 0.7,
+
+      background_color: { r: 0, g: 0, b: 0 },
+      transparent: false
+    });
+
+    aerth.activate();
+
+    console.log(aerth);
+
+    aerth.pointers[0].`
+
+    
+  </script>
+</body>
+</html>

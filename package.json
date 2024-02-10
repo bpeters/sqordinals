@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "fluid-canvas": "^0.9.3",
     "terser-webpack-plugin": "^5.3.9",
     "web3": "^4.0.3",
     "webpack": "^5.88.0",
